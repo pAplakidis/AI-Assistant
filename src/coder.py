@@ -6,6 +6,7 @@ import ollama
 from typing import Dict
 
 import utils
+from constants import *
 
 DEBUG = int(os.getenv("DEBUG", 0))
 
@@ -13,7 +14,7 @@ DEBUG = int(os.getenv("DEBUG", 0))
 class CoderAgent:
   """A coding assistant agent that generates and executes python code based on user prompts. This agent can also use tools to enhance its capabilities."""
 
-  def __init__(self, model="deepseek-coder:6.7b"):
+  def __init__(self, model=DEEPSEEK_CODER):
     self.model = model
 
   def get_tools(self):

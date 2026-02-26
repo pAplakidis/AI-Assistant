@@ -1,0 +1,6 @@
+MISTRAL_INSTRUCT = "mistral:7b-instruct"
+DEEPSEEK_CODER = "deepseek-coder:6.7b"
+LLAMA_3_8BIT = "llama3.1:8b-instruct-q8_0"
+LLAMA_3_4BIT = "llama3.1:8b-instruct-q4_K_M"
+QWEN = "qwen2.5:3b"
+TINY_LLAMA = "tinyllama:1.1b"
