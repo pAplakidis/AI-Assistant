@@ -27,19 +27,21 @@ def generate_code(user_prompt: str, execute=False):
 def web_search(user_prompt: str):
   researcher = ResearcherAgent()
   researcher.research(user_prompt)
-  # query = researcher.create_search_query(user_prompt)
-  # researcher.web_search(query)
+  query = researcher.create_search_query(user_prompt)
+  return researcher.web_search(query)
 
 
 if __name__ == "__main__":
-  # user_prompt = f"""
-  #   Write a function that creates a pandas dataframe with 3 columns: 'Name', 'Age', 'City' and 5 rows of data. Then, filter the dataframe to only include rows where Age > 30 and return the filtered dataframe.
-  #   Then run the function and save the returned dataframe to a CSV file named 'filtered_data.csv'.
-  # """
-  # generate_code(user_prompt)
+  # TODO: use orchestrator to research and write code for:
+  # cuda tiled matmul using python ctypes and nvrtc
+  user_prompt = f"""
+    Write a function that creates a pandas dataframe with 3 columns: 'Name', 'Age', 'City' and 5 rows of data. Then, filter the dataframe to only include rows where Age > 30 and return the filtered dataframe.
+    Then run the function and save the returned dataframe to a CSV file named 'filtered_data.csv'.
+  """
+  generate_code(user_prompt)
   
-
   user_prompt = f"""
   I need documentation for python dotenv package. Can you find it for me?
   """
-  web_search(user_prompt)
+  result = web_search(user_prompt)
+  print(result)

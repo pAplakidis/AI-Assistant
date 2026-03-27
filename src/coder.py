@@ -22,6 +22,8 @@ class CoderAgent:
 
   # TODO: use tools first before generating code
   def generate_code(self, question):
+    print(f"[coder]: Generating code for question: {question}")
+
     prompt = f"""
     You are a helpful assistant with a senior background that generates python code based on user prompts.
 

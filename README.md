@@ -4,9 +4,10 @@ Like ChatGPT, not as cool but local.
 
 A local ecosystem for various LLM agents to interact and execute the user's queries.
 
-# Setup
+# Setup (tested on Ubuntu 24.04 using an NVIDIA RTX 4060Ti 16GB)
 
 - TODO: ollama + models (script)
+- TODO: searxng docker setup (link to documentation)
 - TODO: requirements.txt
 
 ## TODO
@@ -16,3 +17,5 @@ A local ecosystem for various LLM agents to interact and execute the user's quer
 - Researcher: Mistral 7b Instruct
 - Summarization, reflection, explanation, background reasoning, RAG: LLAMA 3.1 8B Insttruct (8bit quant)
 - For small tasks: TinyLLAMA 1.1B, QWEN 2.5 3B
+- Wrap agentic ecosystem inside a FastAPI backend and pack using docker
+- React frontend for chatting
