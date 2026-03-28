@@ -4,8 +4,8 @@ import ollama
 import requests
 from bs4 import BeautifulSoup
 
+from message_bus import MessageBus
 from constants import *
-from utils import function_to_tool_schema
 
 MAX_ITERS = 10
 SEARCH_URL = "http://localhost:8888/search"
@@ -16,10 +16,11 @@ MAX_CRAWLED_TEXT = 5000
 class ResearcherAgent:
   """An agent that can search the web to get useful links and information based on user prompts. This agent can also use tools to enhance its capabilities."""
 
-  def __init__(self, model=MISTRAL_INSTRUCT):
+  def __init__(self, bus: MessageBus, model=MISTRAL_INSTRUCT):
     self.model = model
     self.query_model = QWEN
-    self.messages = []  # context
+    self.messages = []  # local agent context
+    self.bus = bus      # global agent context
 
   def create_search_query(self, user_prompt: str):
     prompt = f"""
@@ -33,7 +34,7 @@ class ResearcherAgent:
     No "SEARCH QUERY: ...", just the raw search query string to be used directly in a google search.
     """
 
-    print("[researcher]: Generating search query...")
+    self.bus.log("[researcher]: Generating search query...")
     response = ollama.chat(
       model=self.query_model,
       messages=[{"role": "user", "content": prompt}]
@@ -50,7 +51,7 @@ class ResearcherAgent:
       A list of links from the search results.
     """
 
-    print(f"[researcher] Searching query: {search_query}")
+    self.bus.log(f"[researcher] Searching query: {search_query}")
     params = {
       "q": search_query,
       "format": "json"
@@ -64,10 +65,10 @@ class ResearcherAgent:
       response = requests.get(SEARCH_URL, params=params, headers=headers)
       response.raise_for_status()
       data = response.json()
-      print(f"[researcher] Search yielded {len(data.get('results', []))} results, using top {MAX_RESULTS}")
+      self.bus.log(f"[researcher] Search yielded {len(data.get('results', []))} results, using top {MAX_RESULTS}")
       results = [{"title": result["title"], "url": result["url"]} for result in data.get("results", [])[:MAX_RESULTS]]
     except Exception as e:
-      print(f"[researcher] Error during web search: {e}")
+      self.bus.log(f"[researcher] Error during web search: {e}")
       results = []
 
     return results
@@ -104,7 +105,7 @@ class ResearcherAgent:
     ]
     """
 
-    print("[researcher] Filtering results...")
+    self.bus.log("[researcher] Filtering results...")
     response = ollama.chat(
       model=self.model,
       messages=[{"role": "user", "content": prompt}]
@@ -115,7 +116,7 @@ class ResearcherAgent:
       filtered = json.loads(content)
       return filtered[:top_k]
     except:
-      print("[researcher] Failed to parse filter_results output, fallback to top_k")
+      self.bus.log("[researcher] Failed to parse filter_results output, fallback to top_k")
       return results[:top_k]
 
   def crawl_webpage(self, url: str) -> str:
@@ -127,14 +128,14 @@ class ResearcherAgent:
     Returns:
       A string containing the main textual content of the webpage, cleaned and truncated to a reasonable length.
     """
-    print("[researcher] Crawling:", url)
+    self.bus.log(f"[researcher] Crawling: {url}")
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
 
     try:
       response = requests.get(url, headers=headers, timeout=10)
       response.raise_for_status()
     except Exception as e:
-      print(f"[researcher] Error crawling {url}: {e}")
+      self.bus.log(f"[researcher] Error crawling {url}: {e}")
       return ""
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -180,7 +181,7 @@ class ResearcherAgent:
 
   # # NOTE: this is a more "agentic" approach, but gets stuck in an infinite loop
   # def research(self, user_prompt: str):
-  #   print(f"[researcher] Starting research for: {user_prompt}")
+  #   self.bus.log(f"[researcher] Starting research for: {user_prompt}")
 
   #   tools = [
   #     function_to_tool_schema(self.create_search_query),
@@ -244,7 +245,7 @@ class ResearcherAgent:
   #         except:
   #           args = {}
 
-  #       print(f"[researcher]: tool call {func_name}({args})")
+  #       self.bus.log(f"[researcher]: tool call {func_name}({args})")
   #       method = getattr(self, func_name)
   #       # ensure correct arguments per function
   #       try:
@@ -257,10 +258,10 @@ class ResearcherAgent:
   #         else:
   #           result = method(**args)
   #       except Exception as e:
-  #         print(f"[researcher] Tool error: {e}")
+  #         self.bus.log(f"[researcher] Tool error: {e}")
   #         result = ""
 
-  #       print(f"[researcher]: tool result: {str(result)[:200]}...")
+  #       self.bus.log(f"[researcher]: tool result: {str(result)[:200]}...")
 
   #       self.messages.append({
   #         "role": "tool",
@@ -271,7 +272,7 @@ class ResearcherAgent:
   #   return "Failed to complete research within iteration limit."
 
   def research(self, user_prompt: str):
-    print(f"[researcher] Starting research for: {user_prompt}")
+    self.bus.log(f"[researcher] Starting research for: {user_prompt}")
 
     # search the web
     query = self.create_search_query(user_prompt)

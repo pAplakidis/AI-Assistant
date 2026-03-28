@@ -1,9 +1,9 @@
+from message_bus import MessageBus
 from agents.coordinator import CoordinatorAgent
-
-# TODO: move to coordinator
 from agents.coder import CoderAgent  
 from agents.researcher import ResearcherAgent
 
+MAX_STEPS = 10
 
 def generate_code(user_prompt: str, execute=False):
   coder = CoderAgent()
@@ -28,18 +28,44 @@ def web_search(user_prompt: str):
   researcher = ResearcherAgent()
   return researcher.research(user_prompt)
 
+def run_agentic_loop(user_prompt: str):
+  bus = MessageBus()
+  bus.set("goal", user_prompt)
+
+  coordinator = CoordinatorAgent(bus=bus)
+  coder = CoderAgent(bus=bus)
+  researcher = ResearcherAgent(bus=bus)
+
+  for step in range(MAX_STEPS):
+    print(f"\n=== Step {step+1} ===")
+    decision = coordinator.plan()
+    action = decision["action"]
+
+    if action == "research":
+      result = researcher.research(decision["input"])
+      bus.set("research_result", result)
+    elif action == "code":
+      # TODO: execute code if necessary
+      code = coder.generate_code(decision["input"])
+      feedback, improved = coder.reflect_on_code_and_regenerate(code, decision["input"])
+      bus.set("code", improved)
+    elif action == "finish":
+      return bus.state
+
+  return "Max steps reached without finishing."
+
 
 if __name__ == "__main__":
-  # TODO: use orchestrator to research and write code for:
-  # cuda tiled matmul using python ctypes and nvrtc
-  user_prompt = f"""
-    Write a function that creates a pandas dataframe with 3 columns: 'Name', 'Age', 'City' and 5 rows of data. Then, filter the dataframe to only include rows where Age > 30 and return the filtered dataframe.
-    Then run the function and save the returned dataframe to a CSV file named 'filtered_data.csv'.
-  """
-  generate_code(user_prompt)
+  # user_prompt = f"""
+  #   Write a function that creates a pandas dataframe with 3 columns: 'Name', 'Age', 'City' and 5 rows of data. Then, filter the dataframe to only include rows where Age > 30 and return the filtered dataframe.
+  #   Then run the function and save the returned dataframe to a CSV file named 'filtered_data.csv'.
+  # """
+  # generate_code(user_prompt)
   
-  user_prompt = f"""
-  I need documentation for python dotenv package. Can you find it for me?
-  """
-  result = web_search(user_prompt)
-  print(result)
+  # user_prompt = f"""
+  # I need documentation for python dotenv package. Can you find it for me?
+  # """
+  # result = web_search(user_prompt)
+  # print(result)
+
+  run_agentic_loop("Write a python script that performs tiled matrix multiplication on the GPU using CUDA. Use ctypes to interface with CUDA and nvrtc to compile CUDA code at runtime. The script should include functions for generating random matrices, performing tiled matrix multiplication, and validating the results against CPU matrix multiplication.")

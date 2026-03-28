@@ -5,6 +5,7 @@ import json
 import ollama
 from typing import Dict
 
+from message_bus import MessageBus
 from constants import *
 from utils import ensure_execute_python_tags
 
@@ -14,15 +15,16 @@ DEBUG = int(os.getenv("DEBUG", 0))
 class CoderAgent:
   """A coding assistant agent that generates and executes python code based on user prompts. This agent can also use tools to enhance its capabilities."""
 
-  def __init__(self, model=DEEPSEEK_CODER):
+  def __init__(self, bus: MessageBus, model=DEEPSEEK_CODER):
     self.model = model
+    self.bus = bus
 
   def get_tools(self):
     pass
 
   # TODO: use tools first before generating code
   def generate_code(self, question):
-    print(f"[coder]: Generating code for question: {question}")
+    self.bus.log(f"[coder]: Generating code for question: {question}")
 
     prompt = f"""
     You are a helpful assistant with a senior background that generates python code based on user prompts.
@@ -40,7 +42,7 @@ class CoderAgent:
     Return ONLY the code wrapped in <execute_python> tags.
     """
 
-    print("[coder]: Generating code...")
+    self.bus.log("[coder]: Generating code...")
     response = ollama.chat(
       model=self.model,
       messages=[{"role": "user", "content": prompt}]
@@ -49,10 +51,10 @@ class CoderAgent:
 
   # TODO: execute code inside a sandbox (docker)
   def execute_code(self, code: str) -> Dict:
-    print("[coder]: Executing code...")
+    self.bus.log("[coder]: Executing code...")
     match = re.search(r"<execute_python>([\s\S]*?)</execute_python>", code)
     if not match:
-      print("[coder]: No code found in the response.")
+      self.bus.log("[coder]: No code found in the response.")
       return
 
     initial_code = match.group(1)
@@ -63,7 +65,7 @@ class CoderAgent:
 
   # TODO: maybe use a different LLM to reflect/debug code if execution fails
   def reflect_on_code_and_regenerate(self, code: str, user_prompt: str):
-    print("[coder]: Reflecting on code and regenerating...")
+    self.bus.log("[coder]: Reflecting on code and regenerating...")
     prompt = f"""
     You are a senior python developer, experienced in debugging and improving code.
     Your task is to review the original given code, identify any issues, and regenerate a corrected version of the code while providing feedback.
