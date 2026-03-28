@@ -104,6 +104,7 @@ class ResearcherAgent:
     ]
     """
 
+    print("[researcher] Filtering results...")
     response = ollama.chat(
       model=self.model,
       messages=[{"role": "user", "content": prompt}]

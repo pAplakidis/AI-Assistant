@@ -5,8 +5,8 @@ import json
 import ollama
 from typing import Dict
 
-import utils
 from constants import *
+from utils import ensure_execute_python_tags
 
 DEBUG = int(os.getenv("DEBUG", 0))
 
@@ -106,7 +106,7 @@ class CoderAgent:
 
     m_code = re.search(r"<execute_python>([\s\S]*?)</execute_python>", content)
     refined_code_body = m_code.group(1).strip() if m_code else ""
-    refined_code = utils.ensure_execute_python_tags(refined_code_body)
+    refined_code = ensure_execute_python_tags(refined_code_body)
     return feedback, refined_code
 
   def run_workflow(self):

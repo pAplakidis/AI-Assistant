@@ -1,8 +1,8 @@
-from coordinator import CoordinatorAgent
+from agents.coordinator import CoordinatorAgent
 
 # TODO: move to coordinator
-from coder import CoderAgent  
-from researcher import ResearcherAgent
+from agents.coder import CoderAgent  
+from agents.researcher import ResearcherAgent
 
 
 def generate_code(user_prompt: str, execute=False):
@@ -26,9 +26,7 @@ def generate_code(user_prompt: str, execute=False):
 
 def web_search(user_prompt: str):
   researcher = ResearcherAgent()
-  researcher.research(user_prompt)
-  query = researcher.create_search_query(user_prompt)
-  return researcher.web_search(query)
+  return researcher.research(user_prompt)
 
 
 if __name__ == "__main__":
