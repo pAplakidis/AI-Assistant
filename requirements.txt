@@ -1,0 +1,5 @@
+json
+textwrap
+requests
+beautifulsoup4
+ollama

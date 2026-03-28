@@ -1,5 +1,4 @@
 import json
-import requests
 from ollama import chat
 
 from constants import *
