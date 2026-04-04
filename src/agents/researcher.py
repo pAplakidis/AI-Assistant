@@ -318,4 +318,6 @@ class ResearcherAgent:
       model=self.model,
       messages=[{"role": "user", "content": final_prompt}]
     )
-    return response["message"]["content"]
+    response = response["message"]["content"]
+    self.bus.log(f"[researcher] Final answer generated {response}")
+    return response

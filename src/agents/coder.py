@@ -109,6 +109,8 @@ class CoderAgent:
     m_code = re.search(r"<execute_python>([\s\S]*?)</execute_python>", content)
     refined_code_body = m_code.group(1).strip() if m_code else ""
     refined_code = ensure_execute_python_tags(refined_code_body)
+    self.bus.log(f"[coder]: Feedback: {feedback}")
+    self.bus.log(f"[coder]: Refined code: {refined_code}")
     return feedback, refined_code
 
   def run_workflow(self):

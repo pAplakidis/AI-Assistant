@@ -6,7 +6,8 @@ from agents.researcher import ResearcherAgent
 MAX_STEPS = 10
 
 def generate_code(user_prompt: str, execute=False):
-  coder = CoderAgent()
+  bus = MessageBus()
+  coder = CoderAgent(bus=bus)
 
   # TODO: there should be a loop - generate, review, generate, execute, review/debug (inside coordinator?)
   code_v1 = coder.generate_code(user_prompt)
@@ -25,7 +26,8 @@ def generate_code(user_prompt: str, execute=False):
     print(exec_namespace)
 
 def web_search(user_prompt: str):
-  researcher = ResearcherAgent()
+  bus = MessageBus()
+  researcher = ResearcherAgent(bus=bus)
   return researcher.research(user_prompt)
 
 def run_agentic_loop(user_prompt: str):
@@ -38,18 +40,30 @@ def run_agentic_loop(user_prompt: str):
 
   for step in range(MAX_STEPS):
     print(f"\n=== Step {step+1} ===")
+
+    # assess completion before planning
+    assessment = coordinator.assess_completion()
+    if assessment.get("ready_to_finish"):
+      bus.log(f"[coordinator] Assessment says task is complete: {assessment['reason']}")
+      bus.record_step("finish", user_prompt, "Task assessed as complete.")
+      return bus.state
+
     decision = coordinator.plan()
     action = decision["action"]
 
     if action == "research":
       result = researcher.research(decision["input"])
       bus.set("research_result", result)
+      summary = result[:200] if isinstance(result, str) else str(result)[:200]
+      bus.record_step("research", decision["input"], summary)
     elif action == "code":
       # TODO: execute code if necessary
       code = coder.generate_code(decision["input"])
       feedback, improved = coder.reflect_on_code_and_regenerate(code, decision["input"])
       bus.set("code", improved)
+      bus.record_step("code", decision["input"], f"Code generated. Feedback: {feedback[:100]}")
     elif action == "finish":
+      bus.record_step("finish", user_prompt, "Coordinator chose to finish.")
       return bus.state
 
   return "Max steps reached without finishing."

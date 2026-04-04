@@ -7,6 +7,7 @@ class MessageBus:
   def __init__(self):
     self.messages = []  # chat history/context
     self.state = {}     # structured state of agents
+    self.history = []   # completed steps log
     self.logs = []      # for debugging
     self.logfile = os.path.join(LOGS_DIR, f"bus_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 
@@ -25,6 +26,14 @@ class MessageBus:
 
   def get(self, key, default=None):
     return self.state.get(key, default)
+
+  def record_step(self, action: str, input_str: str, result_summary: str):
+    self.history.append({
+      "step": len(self.history) + 1,
+      "action": action,
+      "input": input_str,
+      "result_summary": result_summary,
+    })
 
   def log(self, msg):
     msg = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}"
