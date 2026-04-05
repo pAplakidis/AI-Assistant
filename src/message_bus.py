@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pprint import pp
 
 LOGS_DIR = "logs/"
 
@@ -12,7 +13,8 @@ class MessageBus:
     self.logfile = os.path.join(LOGS_DIR, f"bus_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 
   def __del__(self):
-    print("[bus] Final state:", self.state)
+    print("[bus] Final state:")
+    pp(self.state)
     with open(self.logfile, 'w') as f:
       for log in self.logs:
         f.write(log + "\n")

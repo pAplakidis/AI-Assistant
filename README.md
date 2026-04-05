@@ -1,6 +1,6 @@
 # AI Assistant
 
-Like ChatGPT, not as cool but local.
+Like ChatGPT, not as cool.
 
 A local ecosystem for various LLM agents to interact and execute the user's queries.
 Tested on Ubuntu 24.04 using an NVIDIA RTX 4060Ti 16GB
