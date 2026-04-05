@@ -1,4 +1,7 @@
 **/__pycache__/
 **/logs/
+**/notes/
+**/pdfs/
+
 .env
 AGENTS.md

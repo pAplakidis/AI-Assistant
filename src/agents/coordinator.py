@@ -1,14 +1,42 @@
 import json
+import asyncio
 from ollama import chat
 
 from constants import *
 from message_bus import MessageBus
+from fastmcp import Client as MCPClient
 
 
 class CoordinatorAgent:
   def __init__(self, bus: MessageBus, model=LLAMA_3_8BIT):
     self.model = model
     self.bus = bus
+    self.ollama_tools = []
+
+  async def load_mcp_tools(self):
+    try:
+      with MCPClient(MCP_URL) as mcp:
+        tools_list = await mcp.list_tools()
+        for tool in tools_list:
+          self.ollama_tools.append({
+            "type": "function",
+            "function": {
+              "name": tool.name,
+              "description": tool.description,
+              "paramteres": tool.inputSchema,
+            },
+          })
+    except Exception as e:
+      self.bus.log(f"[coordinator] Failed to load MCP tools: {e}")
+
+  async def execute_mcp_tool(self, tool_name: str, args: dict):
+    try:
+      async with MCPClient(MCP_URL) as mcp:
+        result = await mcp.call_tool(tool_name, args)
+        return result
+    except Exception as e:
+      self.bus.log(f"[coordinator] Failed to execute MCP tool {tool_name}: {e}")
+      return None
 
   def assess_completion(self):
     prompt = f"""
